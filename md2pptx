@@ -1939,7 +1939,7 @@ def createTitleOrSectionSlide(
     titleSize,
     subtitleText,
     subtitleSize,
-    notes_text,
+    notes_text, slideInfo = None
 ):
     marginBase = processingOptions.getCurrentOption("marginBase")
 
@@ -1975,6 +1975,7 @@ def createTitleOrSectionSlide(
             subtitleShape.height = marginBase * 2
 
     reportSlideTitle(slideNumber, 1, flattenedTitle)
+
 
     if want_numbers_headings is True:
         addFooter(presentation, slideNumber, slide)
@@ -4140,7 +4141,16 @@ def createSlide(presentation, slideNumber, slideInfo):
                 slideInfo.bullets,
                 tocStyle,
             )
+        elif slideInfo.bullets:
+            # print("createContentSlide in section with bulletes:%s" % slideInfo.bullets)
+            # This is an ordinary contents slide
+            slide = createContentSlide(
+                presentation,
+                slideNumber,
+                slideInfo,
+            )
         else:
+            # print("Section only :%s" % slideInfo.titleText)
             slide = createTitleOrSectionSlide(
                 presentation,
                 slideNumber,
@@ -4149,8 +4159,9 @@ def createSlide(presentation, slideNumber, slideInfo):
                 sectionTitleSize,
                 slideInfo.subtitleText,
                 sectionSubtitleSize,
-                notes_text,
+                notes_text, slideInfo
             )
+
 
     elif slideInfo.blockType == "title":
         slide = createTitleOrSectionSlide(
@@ -4589,7 +4600,7 @@ for i in range(len(banner)):
     bannerUnderline = bannerUnderline + "="
 
 print("\n" + banner + "\n" + bannerUnderline)
-print("\nOpen source project: https://github.com/MartinPacker/md2pptx")
+print("\nOpen source project: https://github.com/ihopeit/md2pptx")
 
 print("\nPython: " + platform.python_version())
 

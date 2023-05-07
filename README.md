@@ -3,6 +3,8 @@ Markdown to Powerpoint Converter
 
 **Note:** md2pptx only supports Python 3. So the installation instructions are for that.
 
+Forked from: https://github.com/MartinPacker/md2pptx.git
+
 **Usage:**
 
   `python3 md2pptx output.pptx < input.markdown`
@@ -15,7 +17,7 @@ or
 
 Installation is straightforward:
 
-1. Install python-pptx
+1. Install python-pptx, graphviz:  `pip3 install python-pptx CairoSVG graphviz`
 2. Clone md2pptx into a new directory
 
 The md2pptx repo includes all the essentials, such as funnel.py. You don't install these with eg pip. There are some optional packages, outlined in the User Guide.
