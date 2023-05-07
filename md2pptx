@@ -27,6 +27,8 @@ from pptx.enum.dml import MSO_PATTERN
 
 import imghdr, struct
 import datetime
+from datetime import date
+
 import html.parser
 from pptx.oxml.xmlchemy import OxmlElement
 from pathlib import Path
@@ -79,8 +81,8 @@ except:
     have_graphviz = False
 
 
-md2pptx_level = "4.1"
-md2pptx_date = "28 April, 2023"
+md2pptx_level = "1.2"
+md2pptx_date = date.strftime(date.today(), "%Y-%m-%d")
 
 namespaceURL = {
     "mc": "http://schemas.openxmlformats.org/markup-compatibility/2006",
@@ -1004,7 +1006,7 @@ def getVideoDimensionsPlus(audioVideoInfo):
 # Render a list of bullets
 def renderText(shape, bullets):
     baseTextDecrement = processingOptions.getCurrentOption("baseTextDecrement")
-    baseTextSize = processingOptions.getCurrentOption("baseTextSize")
+    baseTextSize = max(processingOptions.getCurrentOption("baseTextSize"),28)
 
     tf = shape.text_frame
 
@@ -1024,8 +1026,11 @@ def renderText(shape, bullets):
         # Set the paragraph's font size, adjusted for level, if necessary
         if baseTextSize > 0:
             p.font.size = Pt(baseTextSize - p.level * baseTextDecrement)
-
+            
         addFormattedText(p, bullet[1])
+        if not p.font.color:
+            p.font.color.rgb  = RGBColor.from_string("0000FF")
+            print("formatted text:%s font size:%s p:%s" % (bullet[1], p.font.size, str(p.font.color.rgb)) )
 
         if bullet[2] == "numbered":
             makeNumberedListItem(p)
@@ -1650,6 +1655,7 @@ def addFormattedText(p, text):
         else:
             subfragments = fragDetail.split("\n")
 
+        # print("fragment text:%s fragType:%s" % (fragment, fragType))
         # Process each subfragment
         sfnum = 0
         for subfragment in subfragments:
@@ -1818,7 +1824,7 @@ def createProcessingSummarySlide(presentation, rawMetadata):
     now = datetime.datetime.now()
     runTime = now.strftime("%H:%M").lstrip()
     runDate = now.strftime("%e %B, %G").lstrip()
-    runDateTime = "Presentation built: " + runTime + " on " + runDate
+    runDateTime = "" # "Presentation built: " + runTime + " on " + runDate
 
     # Format title and add title text
     slideTitleBottom, title, flattenedTitle = formatTitle(
@@ -2641,6 +2647,8 @@ def createListBlock(slideInfo, slide, renderingRectangle):
     bulletsShape.width = renderingRectangle.width
 
     bulletCount = len(slideInfo.bullets)
+
+    print("bulletcount:%s" % bulletCount)
 
     # Set bulleted text height - depending on whether there's a card
     # Remainder is card area height - if there are cards
@@ -4573,7 +4581,7 @@ def createFootnoteSlides(prs, slideNumber, footnoteDefinitions):
 start_time = time.time()
 
 banner = (
-    "md2pptx Markdown To Powerpoint Converter " + md2pptx_level + " " + md2pptx_date
+    "文档由大脑助理生成 " + md2pptx_level + ", " + md2pptx_date
 )
 
 bannerUnderline = ""
@@ -4633,7 +4641,8 @@ if len(input_file) == 0:
 
 slideNumber = 1
 
-bulletRegex = re.compile("^(\s)*(\*)(.*)")
+bulletRegex = re.compile("^(\s)*([\*])(.*)")
+bulletRegex2 = re.compile("^(\s)*(-)(.*)")
 numberRegex = re.compile("^(\s)*(\d+)\.(.*)")
 metadataRegex = re.compile("^(.+):(.+)")
 
@@ -5366,7 +5375,7 @@ for line in metadata_lines:
         (check, colour) = parseRGB(value2)
         if check:
             # Valid RGB hex value
-            fgcolors[spanClass] = colour
+           fgcolors[spanClass] = colour
         else:
             print(f"Invalid value for {name} - {value}. Ignoring.")
 
@@ -5722,7 +5731,7 @@ for lineNumber, line in enumerate(linesAfterConcatenation):
         inTitle = True
 
     # Taskpaper task
-    if line[:1] == "-":
+    if line[:1] == "-" and line.find("@") > 0:
         # Get start of attributes
         attributesStart = line.find("@")
 
@@ -6207,6 +6216,7 @@ for lineNumber, line in enumerate(linesAfterConcatenation):
 
     elif match := bulletRegex.match(line):
         # Bulleted list
+        #print("bullet matched inCard:%s line:%s" % (inCard, line) )
         bulletLine = match.group(3).lstrip()
         bulletLevel = calculateIndentationLevel(
             match.start(2), processingOptions.getCurrentOption("indentSpaces")
@@ -6226,7 +6236,6 @@ for lineNumber, line in enumerate(linesAfterConcatenation):
         inList = True
         inTable = False
         inTitle = False
-
     elif match := numberRegex.match(line):
         # Numbered list
         bulletLine = match.group(3).lstrip()
